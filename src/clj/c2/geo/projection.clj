@@ -41,14 +41,33 @@
   "Albers projection with Alaska, Hawaii, and Puerto Rico scaled/translated to fit nicely with each other"
   [& args]
   (let [lower48 (apply albers args)
+        [dx dy] (:translate lower48)
+        dz (/ (:scale lower48) 1000)
         alaska  (assoc lower48
                   :origin [-160 60]
-                  :prallels [55 65])
+                  :parallels [55 65]
+                  :scale (* 0.6 (:scale lower48))
+                  :translate [(- dx (* dz 400))
+                              (+ dy (* dz 170))])
         hawaii (assoc lower48
                  :origin [-160 20]
-                 :prallels [8 18])
+                 :parallels [8 18]
+                 :translate [(- dx (* dz 190))
+                             (+ dy (* dz 200))])
         puerto-rico (assoc lower48
                       :origin [-60 10]
-                      :prallels [8 18])]
+                      :parallels [8 18]
+                      :scale (* 1.5 (:scale lower48))
+                      :translate [(+ dx (* dz 580))
+                                  (+ dy (* dz 430))])]
 
-))
+    (fn [[lon lat]]
+      ((cond
+        (and (> lat 50)
+             (< lon -127)) alaska
+        (< lon -140) hawaii
+        (< lat 21) puerto-rico
+        :else lower48) [lon lat]))))
+
+
+
